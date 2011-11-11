@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+use strict;
+
+use JSON;
+
+my $project_files = [
+    { filename => "family.js", contentType => "application/javascript" },
+    { filename => "family.html", contentType => "text/html" },
+    { filename => "family.css", contentType => "text/css" },
+];
+
+
+foreach ( @$project_files ) {
+
+    my $filename = $_->{'filename'};
+    my $contentType = $_->{'contentType'};
+
+    # Get latest revision
+    my $rev = from_json(`curl -s -X GET localhost:5984/family/html`)->{'_rev'};
+
+    # Upload files
+    `curl -X PUT localhost:5984/family/html/$filename?rev=$rev --data-binary \@./$filename -H \"Content-Type: $contentType\"`;
+
+}
