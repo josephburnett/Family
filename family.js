@@ -28,7 +28,7 @@ var family_text = (function () {
     function doc_list(docs) {
         var list = $('<ul></ul>');
         for (var i in docs) {
-            var entry = $('<li>' + docs[i].name + '</li>');
+            var entry = $('<li class="link">' + docs[i].name + '</li>');
             entry[0].uuid = docs[i]._id;
             entry.click(function() {
                 load(this.uuid);
@@ -120,7 +120,7 @@ var family_graph = (function() {
             renderUuid(this.uuid);
             family_text.load(this.uuid);
         }
-        $(text.node).addClass('link');
+        //$(text.node).addClass('link');
         return text;
     }
 
