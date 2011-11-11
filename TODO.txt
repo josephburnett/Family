@@ -1,0 +1,8 @@
+- decorate family graph links
+- style family text
+- multiple partners in family graph (expand circle on hover?)
+- always show partners (for siblings and children)
+- change data model to use relationship documents?
+- add more actions
+- link to existing individual capability (autocomplete?)
+- private and public notes
