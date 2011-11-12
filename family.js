@@ -131,9 +131,23 @@ var family_graph = (function() {
         }
 
         var set = paper.set();
-        var circle = paper.circle(x,y,radius);
-        circle.attr({ fill: "#FFF" });
-        set.push( circle );
+
+        if (docs.length <= 2) {
+            var circle = paper.circle(x,y,radius);
+            circle.attr({ fill: "#FFF" });
+            set.push( circle );
+        } else {
+            
+            var ext = (docs.length-2) * 14;
+            set.push(
+                paper.path("M"+(x-radius)+" "+y+
+                           "A "+radius+" "+radius+" 0 1 1 "+(x+radius)+" "+y+
+                           "L"+(x+radius)+" "+(y+ext)+
+                           "A "+radius+" "+radius+" 0 1 1 "+(x-radius)+" "+(y+ext)+
+                           "L"+(x-radius)+" "+y)
+                .attr({ fill: "#FFF"})
+            );
+        }
 
         if (docs.length == 1) {
             set.push(linkedInitials(docs[0], x, y));
@@ -148,7 +162,18 @@ var family_graph = (function() {
             );
         }
 
-        // TODO do something with 3+ partners
+        else if (docs.length > 2) {
+            var ext = (docs.length-2) * 14;
+            set.push(
+                linkedInitials(docs[0], x, y-radius*0.40),
+                paper.path("M"+(x-radius).toString()+" "+y+
+                           "L"+(x+radius).toString()+" "+y)
+            );
+            for (var i = 1; i < docs.length; i++) {
+                var offset = 14 * (i-1);
+                set.push(linkedInitials(docs[i], x, y+radius*0.40 + offset));
+            }
+        }
 
         set.x = x;
         set.y = y;
