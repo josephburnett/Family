@@ -281,7 +281,7 @@ var family_menu = (function() {
     }
 
     function link(f, p, element, caption) {
-        var text = $('<'+element+'>'+caption+'</'+element+'>');
+        var text = $('<'+element+' class="link">'+caption+'</'+element+'>');
         text[0].p = p;
         text[0].f = f;
         text.click(function() {
