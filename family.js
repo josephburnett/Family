@@ -124,7 +124,7 @@ var family_graph = (function() {
         return text;
     }
 
-    function drawNode(docs, x, y) {
+    function drawNode(docs, x, y, fillColor) {
 
         if (docs == undefined || docs[0] == undefined) {
             return; 
@@ -132,20 +132,36 @@ var family_graph = (function() {
 
         var set = paper.set();
 
-        if (docs.length <= 2) {
+        if (docs.length == 1) {
             var circle = paper.circle(x,y,radius);
-            circle.attr({ fill: "#FFF" });
+            circle.attr({ fill: fillColor || "#FFF" });
             set.push( circle );
-        } else {
-            
+        } 
+
+        else if (docs.length == 2) {
+            set.push( 
+                paper.path("M"+(x-radius)+" "+y+
+                           "A "+radius+" "+radius+" 0 1 1 "+(x+radius)+" "+y+
+                           "L"+(x-radius)+" "+y)
+                .attr({ fill: fillColor || "#FFF" }),
+                paper.path("M"+(x+radius)+" "+y+
+                           "A "+radius+" "+radius+" 0 1 1 "+(x-radius)+" "+y)
+                .attr({ fill: "#FFF" })
+            );
+        } 
+
+        else {
             var ext = (docs.length-2) * 14;
             set.push(
                 paper.path("M"+(x-radius)+" "+y+
                            "A "+radius+" "+radius+" 0 1 1 "+(x+radius)+" "+y+
+                           "L"+(x-radius)+" "+y)
+                .attr({ fill: fillColor || "#FFF" }),
+                paper.path("M"+(x+radius)+" "+y+
                            "L"+(x+radius)+" "+(y+ext)+
                            "A "+radius+" "+radius+" 0 1 1 "+(x-radius)+" "+(y+ext)+
                            "L"+(x-radius)+" "+y)
-                .attr({ fill: "#FFF"})
+                .attr({ fill: "#FFF" })
             );
         }
 
@@ -156,18 +172,14 @@ var family_graph = (function() {
         else if (docs.length == 2) {
             set.push( 
                 linkedInitials(docs[0], x, y-radius*0.40),
-                linkedInitials(docs[1], x, y+radius*0.40),
-                paper.path("M"+(x-radius).toString()+" "+y+
-                           "L"+(x+radius).toString()+" "+y)
+                linkedInitials(docs[1], x, y+radius*0.40)
             );
         }
 
         else if (docs.length > 2) {
             var ext = (docs.length-2) * 14;
             set.push(
-                linkedInitials(docs[0], x, y-radius*0.40),
-                paper.path("M"+(x-radius).toString()+" "+y+
-                           "L"+(x+radius).toString()+" "+y)
+                linkedInitials(docs[0], x, y-radius*0.40)
             );
             for (var i = 1; i < docs.length; i++) {
                 var offset = 14 * (i-1);
@@ -217,7 +229,7 @@ var family_graph = (function() {
             for (var i in siblings) {
                 if (siblings[i].uuid == uuid) {
                     siblings[i].remove();
-                    drawChildren(docs.children, drawNode(docs.partners, siblings[i].x, middle), bottom);
+                    drawChildren(docs.children, drawNode(docs.partners, siblings[i].x, middle, "#fffebf"), bottom);
                 }
             }
         }});
