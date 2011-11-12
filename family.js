@@ -119,6 +119,7 @@ var family_graph = (function() {
         text.node.onclick = function() { 
             renderUuid(this.uuid);
             family_text.load(this.uuid);
+            family_menu.load(this.uuid);
         }
         //$(text.node).addClass('link');
         return text;
