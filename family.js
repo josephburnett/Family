@@ -125,7 +125,7 @@ var family_graph = (function() {
         return text;
     }
 
-    function drawNode(docs, x, y, fillColor) {
+    function drawNode(docs, x, y, fillColor, showChildrenDots) {
 
         if (docs == undefined || docs[0] == undefined) {
             return; 
@@ -137,6 +137,9 @@ var family_graph = (function() {
             var circle = paper.circle(x,y,radius);
             circle.attr({ fill: fillColor || "#FFF" });
             set.push( circle );
+            if (showChildrenDots) {
+                set.push( paper.text(x, y+radius+10, "...") );
+            }
         } 
 
         else if (docs.length == 2) {
@@ -149,6 +152,9 @@ var family_graph = (function() {
                            "A "+radius+" "+radius+" 0 1 1 "+(x-radius)+" "+y)
                 .attr({ fill: "#FFF" })
             );
+            if (showChildrenDots) {
+                set.push( paper.text(x, y+radius+10, "...") );
+            }
         } 
 
         else {
@@ -164,6 +170,9 @@ var family_graph = (function() {
                            "L"+(x-radius)+" "+y)
                 .attr({ fill: "#FFF" })
             );
+            if (showChildrenDots) {
+                set.push( paper.text(x, y+radius+ext+10, "...") );
+            }
         }
 
         if (docs.length == 1) {
@@ -208,7 +217,7 @@ var family_graph = (function() {
         var drawn_children = [];
         var interval = width / children.length;
         for (var i in children) {
-            var node = drawNode([children[i]], interval*i + interval/2, y)
+            var node = drawNode(children[i].partners, interval*i + interval/2, y, false, children[i].drawChildrenDots)
             drawn_children.push(node);
             connect(node, parentNode);
         }
@@ -225,12 +234,22 @@ var family_graph = (function() {
 
             paper.clear();
 
-            var siblings = drawChildren(docs.siblings, 
-                drawNode(docs.parents, center, top), middle);
+            var siblings_docs = [];
+            for (var i in docs.sibling_partners) {
+                siblings_docs.push({ partners: docs.sibling_partners[i], drawChildrenDots: docs.sibling_children[i].length > 0 });
+            }
+
+            var siblings = drawChildren(siblings_docs, drawNode(docs.parents, center, top), middle);
+
+            var children_docs = [];
+            for (var i in docs.children_partners) {
+                children_docs.push({ partners: docs.children_partners[i], drawChildrenDots: docs.grand_children[i].length > 0 });
+            }
+
             for (var i in siblings) {
                 if (siblings[i].uuid == uuid) {
                     siblings[i].remove();
-                    drawChildren(docs.children, drawNode(docs.partners, siblings[i].x, middle, "#fffebf"), bottom);
+                    drawChildren(children_docs, drawNode(docs.partners, siblings[i].x, middle, "#fffebf"), bottom);
                 }
             }
         }});
@@ -632,9 +651,9 @@ var family_cache = (function() {
 
                             for (var i = 0; i < docs.siblings.length; i++) {
                                 docs.sibling_children[i] = values[index++];
+                                docs.sibling_partners[i] = [];
+                                docs.sibling_partners[i].push(docs.siblings[i]);
                                 if (docs.siblings[i].partners) {
-                                    docs.sibling_partners[i] = [];
-                                    docs.sibling_partners[i].push(docs.siblings[i]);
                                     for (var j = 0; j < docs.siblings[i].partners.length; j++) {
                                         docs.sibling_partners[i].push(values[index++]);
                                     }
@@ -643,9 +662,9 @@ var family_cache = (function() {
 
                             for (var i = 0; i < docs.children.length; i++) {
                                 docs.grand_children[i] = values[index++];
+                                docs.children_partners[i] = [];
+                                docs.children_partners[i].push(docs.children[i]);
                                 if (docs.children[i].partners) {
-                                    docs.children_partners[i] = [];
-                                    docs.children_partners[i].push(docs.children[i]);
                                     for (var j = 0; j < docs.children[i].partners.length; j++) {
                                         docs.children_partners[i].push(values[index++]);
                                     }

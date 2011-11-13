@@ -1,5 +1,4 @@
 - decorate family graph links
-- always show partners (for siblings and children)
 - change data model to use relationship documents?
 - add more actions (add sibling, delete, disconnect)
 - link to existing individual, instead of new (autocomplete?)
