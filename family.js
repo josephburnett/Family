@@ -4,7 +4,7 @@ var family_text = (function () {
 
     var default_id = '8a1769e242963d6252f192a3b905b124';
     var suppressed_fields = { parents: true, partners: true, _rev: true, name: true, _id: true };
-    var default_name = '______';
+    var default_name = 'someone';
 
     function clear() {
         $('#title').html('loading...');
@@ -51,7 +51,7 @@ var family_text = (function () {
             $('#individual').append(field_list(individual));
             $('#partners').append(doc_list(family.partners));
             $('#parents').append(doc_list(family.parents));
-            $('#siblings').append(doc_list(family.siblings));
+            $('#siblings').append(doc_list(family.siblings.slice(1)));
             $('#children').append(doc_list(family.children));
         }});
     }
@@ -264,7 +264,7 @@ var family_graph = (function() {
 
 var family_menu = (function() {
 
-    var default_name = "______";
+    var default_name = "someone";
 
     function set_gender(params) {
         var uuid = params.uuid;
@@ -333,6 +333,12 @@ var family_menu = (function() {
         }});
     }
 
+    function edit_document(params) {
+        var uuid = params.uuid;
+        var url = "http://127.0.0.1:5984/_utils/document.html?family/" + uuid;
+        window.open(url);
+    }
+
     function first_name(doc) {
         return doc.name.split(' ')[0];
     }
@@ -391,6 +397,9 @@ var family_menu = (function() {
                 ));
                 menu.append(item);
             }
+
+            // document
+            menu.append(link(edit_document, { uuid: uuid }, "li", "Edit document directly"));
 
             $('#menu').append(menu);
 
@@ -625,8 +634,10 @@ var family_cache = (function() {
                         docs.children.push(values[start][j]);
                     }
 
+                    docs.siblings.push(doc);
                     for (var i in unique_siblings) {
-                        docs.siblings.push(unique_siblings[i]);
+                        if (unique_siblings[i]._id != doc._id)
+                            docs.siblings.push(unique_siblings[i]);
                     }
 
                     // Get grandchildren and sibling children
