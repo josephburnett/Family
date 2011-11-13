@@ -125,7 +125,7 @@ var family_graph = (function() {
         return text;
     }
 
-    function drawNode(docs, x, y, fillColor, showChildrenDots) {
+    function drawNode(docs, x, y, fillColor, showChildrenDots, showParentsDots) {
 
         if (docs == undefined || docs[0] == undefined) {
             return; 
@@ -139,6 +139,9 @@ var family_graph = (function() {
             set.push( circle );
             if (showChildrenDots) {
                 set.push( paper.text(x, y+radius+10, "...") );
+            }
+            if (showParentsDots) {
+                set.push( paper.text(x, y-radius-15, "...") );
             }
         } 
 
@@ -154,6 +157,9 @@ var family_graph = (function() {
             );
             if (showChildrenDots) {
                 set.push( paper.text(x, y+radius+10, "...") );
+            }
+            if (showParentsDots) {
+                set.push( paper.text(x, y-radius-15, "...") );
             }
         } 
 
@@ -172,6 +178,9 @@ var family_graph = (function() {
             );
             if (showChildrenDots) {
                 set.push( paper.text(x, y+radius+ext+10, "...") );
+            }
+            if (showParentsDots) {
+                set.push( paper.text(x, y-radius-15, "...") );
             }
         }
 
@@ -239,7 +248,13 @@ var family_graph = (function() {
                 siblings_docs.push({ partners: docs.sibling_partners[i], drawChildrenDots: docs.sibling_children[i].length > 0 });
             }
 
-            var siblings = drawChildren(siblings_docs, drawNode(docs.parents, center, top), middle);
+            var drawParentsDots = false;
+            for (var i in docs.parents) {
+                if (docs.parents[i].partners && docs.parents[i].partners.length > 0)
+                    drawParentsDots = true;
+            }
+
+            var siblings = drawChildren(siblings_docs, drawNode(docs.parents, center, top, undefined, false, drawParentsDots), middle);
 
             var children_docs = [];
             for (var i in docs.children_partners) {
