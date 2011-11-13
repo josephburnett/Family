@@ -570,10 +570,14 @@ var family_cache = (function() {
                 f, function(values) {
 
                     var docs = {
-                        partners: [],
-                        parents:  [],
-                        siblings: [],
-                        children: []
+                        partners:          [],
+                        parents:           [],
+                        siblings:          [],
+                        sibling_children:  [],
+                        sibling_partners:  [],
+                        children:          [],
+                        grand_children:    [],
+                        children_partners: [],
                     };
 
                     var i,j,start = 0;
@@ -606,7 +610,53 @@ var family_cache = (function() {
                         docs.siblings.push(unique_siblings[i]);
                     }
 
-                    callback(docs);
+                    // Get grandchildren and sibling children
+                    var g = [];
+                    for (var i in docs.siblings) {
+                        g.push({ f: get_children, params: { uuid: docs.siblings[i]._id } });
+                        for (var j in docs.siblings[i].partners) {
+                            g.push({ f: get, params: { uuid: docs.siblings[i].partners[j] } });
+                        }
+                    }
+                    for (var i in docs.children) {
+                        g.push({ f: get_children, params: { uuid: docs.children[i]._id } });
+                        for (var j in docs.children[i].partners) {
+                            g.push({ f: get, params: { uuid: docs.children[i].partners[j] } });
+                        }
+                    }
+
+                    async_align(
+                        g, function(values) {
+
+                            var index = 0;
+
+                            for (var i = 0; i < docs.siblings.length; i++) {
+                                docs.sibling_children[i] = values[index++];
+                                if (docs.siblings[i].partners) {
+                                    docs.sibling_partners[i] = [];
+                                    docs.sibling_partners[i].push(docs.siblings[i]);
+                                    for (var j = 0; j < docs.siblings[i].partners.length; j++) {
+                                        docs.sibling_partners[i].push(values[index++]);
+                                    }
+                                }
+                            }
+
+                            for (var i = 0; i < docs.children.length; i++) {
+                                docs.grand_children[i] = values[index++];
+                                if (docs.children[i].partners) {
+                                    docs.children_partners[i] = [];
+                                    docs.children_partners[i].push(docs.children[i]);
+                                    for (var j = 0; j < docs.children[i].partners.length; j++) {
+                                        docs.children_partners[i].push(values[index++]);
+                                    }
+                                }
+                            }
+
+                            DEBUG_FAMILY = docs;
+
+                            if (callback) { callback(docs); }
+                        }
+                    );
                 }
             );
         }});
