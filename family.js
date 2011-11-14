@@ -121,7 +121,12 @@ var family_graph = (function() {
             family_text.load(this.uuid);
             family_menu.load(this.uuid);
         }
-        //$(text.node).addClass('link');
+        text.attr({ fill: "#006" });
+        text.hover(
+            function() { this.attr({ fill: "#00F" }); }, 
+            function() { this.attr({ fill: "#006" }); }
+        );
+        text.node.style.cursor = 'pointer';
         return text;
     }
 
