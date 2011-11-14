@@ -4,3 +4,8 @@
 - private and public notes
 - sort siblings and children consistently
 - show multiple partners for parents?
+
+- editable fields
+    http://127.0.0.1:5984/_utils/script/futon.browse.js?0.11.0 (search for makeEditable)
+    http://127.0.0.1:5984/_utils/script/jquery.editinline.js
+    $(".editable").makeEditable({ accept: function(val) { $(this).html(val); acceptLabel: "accept", cancelLabel: "cancel" } });

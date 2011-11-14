@@ -5,6 +5,7 @@ var family_text = (function () {
     var default_id = '8a1769e242963d6252f192a3b905b124';
     var suppressed_fields = { parents: true, partners: true, _rev: true, name: true, _id: true };
     var default_name = 'someone';
+    var is_dirty = false;
 
     function clear() {
         $('#title').html('loading...');
@@ -19,7 +20,7 @@ var family_text = (function () {
         var list = "";
         for (var i in doc) {
             if (!suppressed_fields[i]) {
-                list += '<li>' + i + ' : ' + doc[i] + '</li>';
+                list += '<li>' + i + ' : <span class="editable link">' + doc[i] + '</span></li>';
             }
         }
         return $('<ul>' + list + '</ul>');
@@ -53,11 +54,31 @@ var family_text = (function () {
             $('#parents').append(doc_list(family.parents));
             $('#siblings').append(doc_list(family.siblings.slice(1)));
             $('#children').append(doc_list(family.children));
+
+            $(".editable").makeEditable({
+                accept: function(val) { $(this).html(val); dirty(); },
+                acceptLabel: "okay",
+                cancelLabel: "cancel"
+            });
+
         }});
     }
 
     function push_state(uuid) {
         history.pushState({ uuid: uuid }, uuid, 'family.html?uuid='+uuid);
+    }
+
+    function dirty() {
+        if (!is_dirty) {
+            is_dirty = true;
+            $('#individual').before($('<span id="save_link" class="link">save</span>')
+                .click(function() { save(); }));
+        }
+    }
+
+    function save() {
+        is_dirty = false;
+        $("#save_link").remove();
     }
 
     window.onpopstate = function(e) { 
@@ -93,7 +114,7 @@ var family_text = (function () {
 var family_graph = (function() {
 
     $.couch.urlPrefix = 'http://localhost:5984';
-    var db = $.couch.db('family');
+    var db = $.couch.db('family_test');
 
     var default_id = '8a1769e242963d6252f192a3b905b124';
 
@@ -355,7 +376,7 @@ var family_menu = (function() {
 
     function edit_document(params) {
         var uuid = params.uuid;
-        var url = "http://127.0.0.1:5984/_utils/document.html?family/" + uuid;
+        var url = "http://127.0.0.1:5984/_utils/document.html?family_test/" + uuid;
         window.open(url);
     }
 
@@ -437,7 +458,7 @@ var family_menu = (function() {
 var family_cache = (function() {
 
     $.couch.urlPrefix = 'http://localhost:5984';
-    var db = $.couch.db('family');
+    var db = $.couch.db('family_test');
 
     var doc_cache = {};
     var children_id_cache = {};
@@ -749,8 +770,6 @@ function async_align(async_functions, callback) {
         }
     }
 }
-
-
 
 
 
