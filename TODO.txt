@@ -1,8 +1,11 @@
-- change data model to use relationship documents?
+- change data model to use relationship documents
+- gedcom import tool
+- implement save() method for individual fields
 - add more actions (add sibling, delete, disconnect)
 - link to existing individual, instead of new (autocomplete?)
-- private and public notes
 - sort siblings and children consistently
+- update title
+- private and public notes
 - show multiple partners for parents?
 
 - editable fields
