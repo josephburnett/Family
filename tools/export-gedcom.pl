@@ -6,7 +6,7 @@ use JSON;
 use Date::Parse;
 use Date::Format;
 
-my $host = "http://192.168.2.5:5984";
+my $host = "localhost:5984";
 my $database = "family";
 
 #my @partnerships = map { $_->{'key'} } @{from_json(`curl -s -X GET $host/$database/_design/app/_view/partnerships?group_level=2`)->{'rows'}};
