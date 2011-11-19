@@ -44,6 +44,7 @@ foreach my $doc (@individuals) {
             unless ($origin_documents{$key}) {
                 $origin_documents{$key} = { 
                     _id => uuid(),
+                    type => "origin",
                     parents => [ 
                         { uuid => $id }, 
                         { uuid => $_ } 
@@ -67,7 +68,7 @@ foreach my $doc (@individuals) {
         my $origin_doc = $origin_documents{$key};
         if ($origin_doc) {
             
-            my $child = { uuid => $id, nature => 'biological_child' };
+            my $child = { uuid => $id, nature => 'biological' };
 
             if ($origin_doc->{'children'}) {
                 push @{$origin_doc->{'children'}}, $child;

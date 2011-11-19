@@ -1,0 +1,68 @@
+{
+    "_id" : "_design/family",
+    "views" : {
+        "family" : {
+            "map" : "
+                function(doc) { 
+                    if (doc.type == 'origin') {
+                        var p = doc.parents;
+                        var c = doc.children;
+                        if (p) { 
+                            for (var i in p) {
+                                for (var j in p) {
+                                    var a = p[i].uuid;
+                                    var b = p[j].uuid; 
+                                    if (a && b && a < b) {
+                                        emit ( [ "1", a, "partner", doc.nature, b ], 1 );
+                                        emit ( [ "2", a, "partner", doc.nature, b ], 1 );
+                                        emit ( [ "1", b, "partner", doc.nature, a ], 1 );
+                                        emit ( [ "2", b, "partner", doc.nature, a ], 1 );
+                                    }
+                                }
+                            }
+                        }
+                        if (c) {
+                            for (var i in c) {
+                                for (var j in c) {
+                                    var a = c[i].uuid;
+                                    var b = c[j].uuid;
+                                    if (a && b && a < b) {
+                                        emit ( [ "1", a, "sibling", "full", b ], 1 );
+                                        emit ( [ "2", a, "sibling", "full", b ], 1 );
+                                        emit ( [ "1", b, "sibling", "full", a ], 1 );
+                                        emit ( [ "2", b, "sibling", "full", a ], 1 );
+                                    }
+                                }
+                            }
+                        }
+                        if (p && c) {
+                            for (var i in p) {
+                                for (var j in c) {
+                                    var a = p[i].uuid;
+                                    var b = c[j].uuid;
+                                    if (a && b && a < b) {
+                                        emit ( [ "1", a, "child", c[j].nature, b ], 1 );
+                                        emit ( [ "2", a, "child", c[j].nature, b ], 1 );
+                                        emit ( [ "1", b, "parent", c[j].nature, a ], 1 );
+                                        emit ( [ "2", b, "parent", c[j].nature, a ], 1 );
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        emit ( [ "3", doc._id, "individual", "self", doc._id ], doc );
+                    }
+                }
+            ",
+            "reduce" : "
+                function (keys, values, rereduce) {
+                    if (!rereduce) {
+                        return values.length;
+                    } else {
+                        return sum(values);
+                    }
+                }
+            "
+        }
+    }
+}

@@ -517,6 +517,7 @@ var family_cache = (function() {
         return doc_cache[uuid];
     }
 
+    // Public function
     function get(p) {
 
         var uuid = p.uuid;
@@ -540,6 +541,7 @@ var family_cache = (function() {
         }
     }   
 
+    // Public function
     function get_children(p) {
 
         var uuid = p.uuid;
@@ -614,6 +616,30 @@ var family_cache = (function() {
             f.push({ f: get, params: { uuid: uuid[i] } });
         }
         async_align(f, function(docs) { callback(docs); });
+    }
+
+    function get_family_v2(p) {
+
+        var id = p.uuid;
+        var callback = p.callback;
+
+        // Get all origins for the current individual
+        // (gives me ids of parents, partners, siblings and children)
+        get_origins(ids, function(origins) {
+            var parent_ids = [];
+            var children_ids = [];
+            $.each(origins, function(index, value) {
+                if (value[0] == 'parent')
+                    parent_ids.push(value[1]);
+                else if (value[0] == 'child')
+                    children_ids.push(value[1]);
+            });
+            
+        });
+            // Get documents and origins for each id
+                // Get documents and origins for each additional id
+            
+
     }
 
     function get_family(p) {
