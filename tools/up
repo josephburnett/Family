@@ -3,6 +3,7 @@
 use strict;
 
 use JSON;
+use File::Slurp;
 
 my $database = "family_test";
 my $project_files = [
@@ -11,6 +12,16 @@ my $project_files = [
     { filename => "family.css", contentType => "text/css" },
 ];
 
+# Upload the design document 
+my $json_doc = read_file("family.json");
+$json_doc =~ s/\s+/ /g;
+my $doc = from_json($json_doc);
+
+my $rev = from_json(`curl -s -X GET http://localhost:5984/$database/_design/family`)->{'_rev'};
+$doc->{'_rev'} = $rev;
+
+write_file("/tmp/family.json", to_json($doc));
+print `curl -X PUT http://localhost:5984/$database/_design/family --data-binary @/tmp/family.json --user josephburnett`;
 
 foreach ( @$project_files ) {
 

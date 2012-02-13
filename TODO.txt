@@ -10,12 +10,16 @@
 
 - editable fields
     http://127.0.0.1:5984/_utils/script/futon.browse.js?0.11.0 (search for makeEditable)
-    http://127.0.0.1:5984/_utils/script/jquery.editinline.js
+    http://127.0.0.1:5984/_utils/scrihttp://localhost:5984/family_test/_design/family/_list/individual_family/denormalized?individual=8a1769e242963d6252f192a3b905b124pt/jquery.editinline.js
     $(".editable").makeEditable({ accept: function(val) { $(this).html(val); acceptLabel: "accept", cancelLabel: "cancel" } });
 
 validate_doc_update function
 attach resources to the design document
 log() function
+
+
+http://localhost:5984/family_test/_design/family/_list/individual_family/denormalized?individual=8a1769e242963d6252f192a3b905b124
+
 
 == map ==
 1. if origin document

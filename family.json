@@ -133,7 +133,7 @@
                     }
                 }
 
-                return family;
+                send(family);
             }
         "
     }
