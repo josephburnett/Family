@@ -1,0 +1,61 @@
+GEDCOM file format:
+
+0 HEAD
+1 GEDC
+2 VERS 5.5
+(1 CHAR ASCII) 
+0 @I1@ INDI
+1 NAME Joseph Burnett
+1 SEX M
+1 BIRT
+2 DATE 20 SEP 1979
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+1 CHIL @I3@
+0 TRLR
+
+* ids can be whatever @uuid@
+
+FAMC (child in family)
+FAMS (parent in family)
+
+What would it take to change my data model to represent partnerships with a document, instead of a double edge?  No need, just create a view.
+
+1. for each doc, for each partner, emit ids in lex order
+2. for each doc, if parents = 2, emit ids in lex order
+3. eliminate duplicates
+
+
+partnerships (group level 2):
+function(doc) {
+    if (doc.partners) {
+        for (var i in doc.partners) {
+            var p = [ doc._id, doc.partners[i] ].sort();
+            emit (p, null);
+        }
+    }
+    if (doc.parents && doc.parents.length == 2) {
+        for (var i in doc.parents) {
+            var p = [ doc.parents[0], doc.parents[1] ].sort();
+            emit (p, null);
+        }
+    }
+}
+function(keys, values, rereduce) {
+    return null;
+}
+http://localhost:5984/family/_design/app/_view/partnerships?group_level=2
+
+How do we make up a uuid for the family?
+
+http://localhost:5984/family/_design/app/_view/docs
+
+
+
+
+
+
+

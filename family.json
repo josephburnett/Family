@@ -1,0 +1,140 @@
+{
+    "_id" : "_design/family",
+    "views" : {
+        "denormalized" : {
+            "map" : "
+                function(doc) { 
+                    if (doc.type == 'origin') {
+                        var p = doc.parents;
+                        var c = doc.children;
+                        if (p) { 
+                            for (var i in p) {
+                                for (var j in p) {
+                                    var a = p[i].uuid;
+                                    var b = p[j].uuid; 
+                                    if (a && b && a < b) {
+                                        emit ( [ '1', a, 'partner', doc.nature, b ], 1 );
+                                        emit ( [ '2', a, 'partner', doc.nature, b ], 1 );
+                                        emit ( [ '1', b, 'partner', doc.nature, a ], 1 );
+                                        emit ( [ '2', b, 'partner', doc.nature, a ], 1 );
+                                    }
+                                }
+                            }
+                        }
+                        if (c) {
+                            for (var i in c) {
+                                for (var j in c) {
+                                    var a = c[i].uuid;
+                                    var b = c[j].uuid;
+                                    if (a && b && a < b) {
+                                        emit ( [ '1', a, 'sibling', 'full', b ], 1 );
+                                        emit ( [ '2', a, 'sibling', 'full', b ], 1 );
+                                        emit ( [ '1', b, 'sibling', 'full', a ], 1 );
+                                        emit ( [ '2', b, 'sibling', 'full', a ], 1 );
+                                    }
+                                }
+                            }
+                        }
+                        if (p && c) {
+                            for (var i in p) {
+                                for (var j in c) {
+                                    var a = p[i].uuid;
+                                    var b = c[j].uuid;
+                                    if (a && b && a < b) {
+                                        emit ( [ '1', a, 'child', c[j].nature, b ], 1 );
+                                        emit ( [ '2', a, 'child', c[j].nature, b ], 1 );
+                                        emit ( [ '1', b, 'parent', c[j].nature, a ], 1 );
+                                        emit ( [ '2', b, 'parent', c[j].nature, a ], 1 );
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        emit ( [ '3', doc._id, 'individual', 'self', doc._id ], doc );
+                    }
+                }
+            ",
+            "reduce" : "
+                function (keys, values, rereduce) {
+                    if (!rereduce) {
+                        return values.length;
+                    } else {
+                        return sum(values);
+                    }
+                }
+            "
+        }
+    },
+    "lists" : {
+        "individual_family" : "
+            function (head, request) {
+
+                var individual_id = request.query.individual;
+                if (!individual_id) return;
+
+                var family = {
+                    partners:          [],
+                    parents:           [],
+                    siblings:          [],
+                    sibling_children:  [],
+                    sibling_partners:  [],
+                    children:          [],
+                    grand_children:    [],
+                    children_partners: []
+                }
+
+                var row;
+                while (row = getRow()) {
+
+                    var key = row.key;
+                    var value = row.value;
+
+                    if (!key || key.length < 5) continue;
+
+                    if (key[0] == '1' && key[1] == individual_id) {
+                        var id = key[4];
+                        switch(key[2]) {
+                            case 'partner':
+                                family.partners[id] = true;
+                                break;
+                            case 'parent':
+                                family.parents[id] = true;
+                                break;
+                            case 'sibling':
+                                family.siblings[id] = true;
+                                break;
+                            case 'child':
+                                family.children[id] = true;
+                                break;
+                            default:
+                        }
+                    }
+
+                    if (key[0] == '2') {
+                        var id = key[4];
+                        switch(key[2]) {
+                            case 'child':
+                                if (family.siblings[id]) family.sibling_children[id] = true;
+                                if (family.children[id]) family.grand_children[id] = true;
+                                break;
+                            case 'partners':
+                                if (family.siblings[id]) family.sibling_partners[id] = true;
+                                if (family.children[id]) family.children_partners[id] = true;
+                                break;
+                            default:
+                        }
+                    }
+
+                    if (key[0] == '3') {
+                        var id = key[4];
+                        for (var list in family) {
+                            if (family[list][id]) family[list].push(value);
+                        }
+                    }
+                }
+
+                return family;
+            }
+        "
+    }
+}

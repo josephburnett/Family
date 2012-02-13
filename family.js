@@ -4,7 +4,8 @@ var family_text = (function () {
 
     var default_id = '8a1769e242963d6252f192a3b905b124';
     var suppressed_fields = { parents: true, partners: true, _rev: true, name: true, _id: true };
-    var default_name = '______';
+    var default_name = 'someone';
+    var is_dirty = false;
 
     function clear() {
         $('#title').html('loading...');
@@ -19,7 +20,7 @@ var family_text = (function () {
         var list = "";
         for (var i in doc) {
             if (!suppressed_fields[i]) {
-                list += '<li>' + i + ' : ' + doc[i] + '</li>';
+                list += '<li>' + i + ' : <span class="editable link">' + doc[i] + '</span></li>';
             }
         }
         return $('<ul>' + list + '</ul>');
@@ -28,7 +29,7 @@ var family_text = (function () {
     function doc_list(docs) {
         var list = $('<ul></ul>');
         for (var i in docs) {
-            var entry = $('<li>' + docs[i].name + '</li>');
+            var entry = $('<li class="link">' + docs[i].name + '</li>');
             entry[0].uuid = docs[i]._id;
             entry.click(function() {
                 load(this.uuid);
@@ -51,13 +52,33 @@ var family_text = (function () {
             $('#individual').append(field_list(individual));
             $('#partners').append(doc_list(family.partners));
             $('#parents').append(doc_list(family.parents));
-            $('#siblings').append(doc_list(family.siblings));
+            $('#siblings').append(doc_list(family.siblings.slice(1)));
             $('#children').append(doc_list(family.children));
+
+            $(".editable").makeEditable({
+                accept: function(val) { $(this).html(val); dirty(); },
+                acceptLabel: "okay",
+                cancelLabel: "cancel"
+            });
+
         }});
     }
 
     function push_state(uuid) {
         history.pushState({ uuid: uuid }, uuid, 'family.html?uuid='+uuid);
+    }
+
+    function dirty() {
+        if (!is_dirty) {
+            is_dirty = true;
+            $('#individual').before($('<span id="save_link" class="link">save</span>')
+                .click(function() { save(); }));
+        }
+    }
+
+    function save() {
+        is_dirty = false;
+        $("#save_link").remove();
     }
 
     window.onpopstate = function(e) { 
@@ -119,21 +140,75 @@ var family_graph = (function() {
         text.node.onclick = function() { 
             renderUuid(this.uuid);
             family_text.load(this.uuid);
+            family_menu.load(this.uuid);
         }
-        $(text.node).addClass('link');
+        text.attr({ fill: "#006" });
+        text.hover(
+            function() { this.attr({ fill: "#00F" }); }, 
+            function() { this.attr({ fill: "#006" }); }
+        );
+        text.node.style.cursor = 'pointer';
         return text;
     }
 
-    function drawNode(docs, x, y) {
+    function drawNode(docs, x, y, fillColor, showChildrenDots, showParentsDots) {
 
         if (docs == undefined || docs[0] == undefined) {
             return; 
         }
 
         var set = paper.set();
-        var circle = paper.circle(x,y,radius);
-        circle.attr({ fill: "#FFF" });
-        set.push( circle );
+
+        if (docs.length == 1) {
+            var circle = paper.circle(x,y,radius);
+            circle.attr({ fill: fillColor || "#FFF" });
+            set.push( circle );
+            if (showChildrenDots) {
+                set.push( paper.text(x, y+radius+10, "...") );
+            }
+            if (showParentsDots) {
+                set.push( paper.text(x, y-radius-15, "...") );
+            }
+        } 
+
+        else if (docs.length == 2) {
+            set.push( 
+                paper.path("M"+(x-radius)+" "+y+
+                           "A "+radius+" "+radius+" 0 1 1 "+(x+radius)+" "+y+
+                           "L"+(x-radius)+" "+y)
+                .attr({ fill: fillColor || "#FFF" }),
+                paper.path("M"+(x+radius)+" "+y+
+                           "A "+radius+" "+radius+" 0 1 1 "+(x-radius)+" "+y)
+                .attr({ fill: "#FFF" })
+            );
+            if (showChildrenDots) {
+                set.push( paper.text(x, y+radius+10, "...") );
+            }
+            if (showParentsDots) {
+                set.push( paper.text(x, y-radius-15, "...") );
+            }
+        } 
+
+        else {
+            var ext = (docs.length-2) * 14;
+            set.push(
+                paper.path("M"+(x-radius)+" "+y+
+                           "A "+radius+" "+radius+" 0 1 1 "+(x+radius)+" "+y+
+                           "L"+(x-radius)+" "+y)
+                .attr({ fill: fillColor || "#FFF" }),
+                paper.path("M"+(x+radius)+" "+y+
+                           "L"+(x+radius)+" "+(y+ext)+
+                           "A "+radius+" "+radius+" 0 1 1 "+(x-radius)+" "+(y+ext)+
+                           "L"+(x-radius)+" "+y)
+                .attr({ fill: "#FFF" })
+            );
+            if (showChildrenDots) {
+                set.push( paper.text(x, y+radius+ext+10, "...") );
+            }
+            if (showParentsDots) {
+                set.push( paper.text(x, y-radius-15, "...") );
+            }
+        }
 
         if (docs.length == 1) {
             set.push(linkedInitials(docs[0], x, y));
@@ -142,13 +217,20 @@ var family_graph = (function() {
         else if (docs.length == 2) {
             set.push( 
                 linkedInitials(docs[0], x, y-radius*0.40),
-                linkedInitials(docs[1], x, y+radius*0.40),
-                paper.path("M"+(x-radius).toString()+" "+y+
-                           "L"+(x+radius).toString()+" "+y)
+                linkedInitials(docs[1], x, y+radius*0.40)
             );
         }
 
-        // TODO do something with 3+ partners
+        else if (docs.length > 2) {
+            var ext = (docs.length-2) * 14;
+            set.push(
+                linkedInitials(docs[0], x, y-radius*0.40)
+            );
+            for (var i = 1; i < docs.length; i++) {
+                var offset = 14 * (i-1);
+                set.push(linkedInitials(docs[i], x, y+radius*0.40 + offset));
+            }
+        }
 
         set.x = x;
         set.y = y;
@@ -170,7 +252,7 @@ var family_graph = (function() {
         var drawn_children = [];
         var interval = width / children.length;
         for (var i in children) {
-            var node = drawNode([children[i]], interval*i + interval/2, y)
+            var node = drawNode(children[i].partners, interval*i + interval/2, y, false, children[i].drawChildrenDots)
             drawn_children.push(node);
             connect(node, parentNode);
         }
@@ -187,12 +269,28 @@ var family_graph = (function() {
 
             paper.clear();
 
-            var siblings = drawChildren(docs.siblings, 
-                drawNode(docs.parents, center, top), middle);
+            var siblings_docs = [];
+            for (var i in docs.sibling_partners) {
+                siblings_docs.push({ partners: docs.sibling_partners[i], drawChildrenDots: docs.sibling_children[i].length > 0 });
+            }
+
+            var drawParentsDots = false;
+            for (var i in docs.parents) {
+                if (docs.parents[i].partners && docs.parents[i].partners.length > 0)
+                    drawParentsDots = true;
+            }
+
+            var siblings = drawChildren(siblings_docs, drawNode(docs.parents, center, top, undefined, false, drawParentsDots), middle);
+
+            var children_docs = [];
+            for (var i in docs.children_partners) {
+                children_docs.push({ partners: docs.children_partners[i], drawChildrenDots: docs.grand_children[i].length > 0 });
+            }
+
             for (var i in siblings) {
                 if (siblings[i].uuid == uuid) {
                     siblings[i].remove();
-                    drawChildren(docs.children, drawNode(docs.partners, siblings[i].x, middle), bottom);
+                    drawChildren(children_docs, drawNode(docs.partners, siblings[i].x, middle, "#fffebf"), bottom);
                 }
             }
         }});
@@ -207,7 +305,7 @@ var family_graph = (function() {
 
 var family_menu = (function() {
 
-    var default_name = "______";
+    var default_name = "someone";
 
     function set_gender(params) {
         var uuid = params.uuid;
@@ -276,12 +374,18 @@ var family_menu = (function() {
         }});
     }
 
+    function edit_document(params) {
+        var uuid = params.uuid;
+        var url = "http://127.0.0.1:5984/_utils/document.html?family/" + uuid;
+        window.open(url);
+    }
+
     function first_name(doc) {
         return doc.name.split(' ')[0];
     }
 
     function link(f, p, element, caption) {
-        var text = $('<'+element+'>'+caption+'</'+element+'>');
+        var text = $('<'+element+' class="link">'+caption+'</'+element+'>');
         text[0].p = p;
         text[0].f = f;
         text.click(function() {
@@ -334,6 +438,9 @@ var family_menu = (function() {
                 ));
                 menu.append(item);
             }
+
+            // document
+            menu.append(link(edit_document, { uuid: uuid }, "li", "Edit document directly"));
 
             $('#menu').append(menu);
 
@@ -410,6 +517,7 @@ var family_cache = (function() {
         return doc_cache[uuid];
     }
 
+    // Public function
     function get(p) {
 
         var uuid = p.uuid;
@@ -433,6 +541,7 @@ var family_cache = (function() {
         }
     }   
 
+    // Public function
     function get_children(p) {
 
         var uuid = p.uuid;
@@ -509,6 +618,30 @@ var family_cache = (function() {
         async_align(f, function(docs) { callback(docs); });
     }
 
+    function get_family_v2(p) {
+
+        var id = p.uuid;
+        var callback = p.callback;
+
+        // Get all origins for the current individual
+        // (gives me ids of parents, partners, siblings and children)
+        get_origins(ids, function(origins) {
+            var parent_ids = [];
+            var children_ids = [];
+            $.each(origins, function(index, value) {
+                if (value[0] == 'parent')
+                    parent_ids.push(value[1]);
+                else if (value[0] == 'child')
+                    children_ids.push(value[1]);
+            });
+            
+        });
+            // Get documents and origins for each id
+                // Get documents and origins for each additional id
+            
+
+    }
+
     function get_family(p) {
 
         var id = p.uuid;
@@ -532,10 +665,14 @@ var family_cache = (function() {
                 f, function(values) {
 
                     var docs = {
-                        partners: [],
-                        parents:  [],
-                        siblings: [],
-                        children: []
+                        partners:          [],
+                        parents:           [],
+                        siblings:          [],
+                        sibling_children:  [],
+                        sibling_partners:  [],
+                        children:          [],
+                        grand_children:    [],
+                        children_partners: [],
                     };
 
                     var i,j,start = 0;
@@ -564,11 +701,59 @@ var family_cache = (function() {
                         docs.children.push(values[start][j]);
                     }
 
+                    docs.siblings.push(doc);
                     for (var i in unique_siblings) {
-                        docs.siblings.push(unique_siblings[i]);
+                        if (unique_siblings[i]._id != doc._id)
+                            docs.siblings.push(unique_siblings[i]);
                     }
 
-                    callback(docs);
+                    // Get grandchildren and sibling children
+                    var g = [];
+                    for (var i in docs.siblings) {
+                        g.push({ f: get_children, params: { uuid: docs.siblings[i]._id } });
+                        for (var j in docs.siblings[i].partners) {
+                            g.push({ f: get, params: { uuid: docs.siblings[i].partners[j] } });
+                        }
+                    }
+                    for (var i in docs.children) {
+                        g.push({ f: get_children, params: { uuid: docs.children[i]._id } });
+                        for (var j in docs.children[i].partners) {
+                            g.push({ f: get, params: { uuid: docs.children[i].partners[j] } });
+                        }
+                    }
+
+                    async_align(
+                        g, function(values) {
+
+                            var index = 0;
+
+                            for (var i = 0; i < docs.siblings.length; i++) {
+                                docs.sibling_children[i] = values[index++];
+                                docs.sibling_partners[i] = [];
+                                docs.sibling_partners[i].push(docs.siblings[i]);
+                                if (docs.siblings[i].partners) {
+                                    for (var j = 0; j < docs.siblings[i].partners.length; j++) {
+                                        docs.sibling_partners[i].push(values[index++]);
+                                    }
+                                }
+                            }
+
+                            for (var i = 0; i < docs.children.length; i++) {
+                                docs.grand_children[i] = values[index++];
+                                docs.children_partners[i] = [];
+                                docs.children_partners[i].push(docs.children[i]);
+                                if (docs.children[i].partners) {
+                                    for (var j = 0; j < docs.children[i].partners.length; j++) {
+                                        docs.children_partners[i].push(values[index++]);
+                                    }
+                                }
+                            }
+
+                            DEBUG_FAMILY = docs;
+
+                            if (callback) { callback(docs); }
+                        }
+                    );
                 }
             );
         }});
@@ -611,8 +796,6 @@ function async_align(async_functions, callback) {
         }
     }
 }
-
-
 
 
 

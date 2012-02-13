@@ -1,0 +1,62 @@
+- change data model to use relationship documents
+- gedcom import tool
+- implement save() method for individual fields
+- add more actions (add sibling, delete, disconnect)
+- link to existing individual, instead of new (autocomplete?)
+- sort siblings and children consistently
+- update title
+- private and public notes
+- show multiple partners for parents?
+
+- editable fields
+    http://127.0.0.1:5984/_utils/script/futon.browse.js?0.11.0 (search for makeEditable)
+    http://127.0.0.1:5984/_utils/script/jquery.editinline.js
+    $(".editable").makeEditable({ accept: function(val) { $(this).html(val); acceptLabel: "accept", cancelLabel: "cancel" } });
+
+validate_doc_update function
+attach resources to the design document
+log() function
+
+== map ==
+1. if origin document
+2.   for each parent/child
+3.     emit [ "1", {relationship}, doc._id, parents[i]._id ] for {parent, child, sibling, partner}
+4.     emit [ "2", {relationship}, doc._id, parents[i]._id ] for {parent, child, sibling, partner}
+5. if individual document, emit ["3", doc ]
+
+function(doc) {
+    if (doc.type == 'origin') {
+        for (var i in doc.parents) {
+            
+        }
+        for (var i in doc.children) {
+
+        }
+    } else {
+        emit( ["3",doc] );
+    }
+}
+
+== reduce ==
+1. for each row
+2.   if "1", "parent", add to list of parents for the key
+3.   if "1", "child", add to the list of children for the key
+4.   if "1", "sibling", add to the list of siblings for the key
+5.   if "1", "partner", add to the list of partners for the key
+6.   if "2", "parent"
+7.     for each document in individual family matching the key
+
+output: 
+
+
+var docs = {
+    partners:          [],
+    parents:           [],
+    siblings:          [],
+    sibling_children:  [],
+    sibling_partners:  [],
+    children:          [],
+    grand_children:    [],
+    children_partners: [],
+};
+
