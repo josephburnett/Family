@@ -21,7 +21,7 @@ my $rev = from_json(`curl -s -X GET http://localhost:5984/$database/_design/fami
 $doc->{'_rev'} = $rev;
 
 write_file("/tmp/family.json", to_json($doc));
-print `curl -X PUT http://localhost:5984/$database/_design/family --data-binary @/tmp/family.json --user josephburnett`;
+print `curl -X PUT http://localhost:5984/$database/_design/family --data-binary @/tmp/family.json --user josephburnett:Pr1v\@t3`;
 
 foreach ( @$project_files ) {
 
