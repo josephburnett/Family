@@ -49,7 +49,7 @@
                                 }
                             }
                         }
-                    } else if (doc.type ==  {
+                    } else if (doc.type == 'individual') {
                         emit ( [ '3', doc._id, 'individual', 'self', doc._id ], doc );
                     }
                 }
@@ -66,7 +66,7 @@
         }
     },
     "lists" : {
-        "test" : "
+        "individual_family" : "
             function (head, request) {
 
                 var individual_id = request.query.individual;
@@ -132,79 +132,6 @@
                     }
 
                     /* Collect family documents */
-                    if (key[0] == '3') {
-                        var id = key[4];
-                        for (var list in family) {
-                            if (family[list][id]) family[list].push(value);
-                        }
-                    }
-                }
-
-                send(JSON.stringify(family));
-            }
-        ",
-        "individual_family" : "
-            function (head, request) {
-
-                var individual_id = request.query.individual;
-                if (!individual_id) return;
-
-                var family = {
-                    partners:          [],
-                    parents:           [],
-                    siblings:          [],
-                    sibling_children:  [],
-                    sibling_partners:  [],
-                    children:          [],
-                    grand_children:    [],
-                    children_partners: []
-                };
-
-                var row;
-                while (row = getRow()) {
-
-                    var key = row.key;
-                    var value = row.value;
-
-                    if (!key || key.length < 5) continue;
-
-                    // collect direct relations ids
-                    if (key[0] == '1' && key[1] == individual_id) {
-                        var id = key[4];
-                        switch(key[2]) {
-                            case 'partner':
-                                family.partners[id] = true;
-                                break;
-                            case 'parent':
-                                family.parents[id] = true;
-                                break;
-                            case 'sibling':
-                                family.siblings[id] = true;
-                                break;
-                            case 'child':
-                                family.children[id] = true;
-                                break;
-                            default:
-                        }
-                    }
-
-                    // collect extended family ids
-                    if (key[0] == '2') {
-                        var id = key[4];
-                        switch(key[2]) {
-                            case 'child':
-                                if (family.siblings[id]) family.sibling_children[id] = true;
-                                if (family.children[id]) family.grand_children[id] = true;
-                                break;
-                            case 'partners':
-                                if (family.siblings[id]) family.sibling_partners[id] = true;
-                                if (family.children[id]) family.children_partners[id] = true;
-                                break;
-                            default:
-                        }
-                    }
-
-                    // collect family documents
                     if (key[0] == '3') {
                         var id = key[4];
                         for (var list in family) {
