@@ -14,14 +14,17 @@ foreach my $doc (@docs) {
     my $id = $doc->{'_id'};
     print "\nProcessing doc $id\n";
 
-    if ($doc->{'type'} == undef and $doc->{'_id'} ne 'html') {
-       
-        print "Defaulting doc " + $id + " to type: individual\n";
+    if ($doc->{'type'} ne 'individual' and $doc->{'_id'} ne 'html') {
+      
+        print "Doc type: $doc->{'type'}\n"; 
+        print "Defaulting doc " . $id . " to type: individual\n";
         $doc->{'type'} = "individual";
         
         my $json_data = to_json($doc);
+        $json_data =~ s/'/\\'/g;
         # TODO: this curl statement breaks on docs with notes
-        #`curl -X PUT $host/$database/$id -d \'$json_data\'`;
+        #print $json_data;
+        `curl -X PUT $host/$database/$id -d \'$json_data\'`;
     }
 
 }
