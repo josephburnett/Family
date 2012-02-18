@@ -236,6 +236,8 @@ var family_graph = (function() {
         set.y = y;
         set.uuid = docs[0]._id;
 
+        console.log("setting drawn node uuid: " + set.uuid);
+
         return set;
     }
 
@@ -267,6 +269,9 @@ var family_graph = (function() {
     function renderUuid(uuid) {
         family_cache.get_family({ uuid: uuid, callback: function(docs) {
 
+            console.log("this is the family given to renderUuid:");
+            console.log(docs);
+
             paper.clear();
 
             var siblings_docs = [];
@@ -281,6 +286,8 @@ var family_graph = (function() {
             }
 
             var siblings = drawChildren(siblings_docs, drawNode(docs.parents, center, top, undefined, false, drawParentsDots), middle);
+
+            if (!siblings) { console.log("siblings is undefined!"); }
 
             var children_docs = [];
             for (var i in docs.children_partners) {
@@ -308,6 +315,9 @@ var family_menu = (function() {
     var default_name = "someone";
 
     function set_gender(params) {
+
+        return; // TODO: reimplement with origins
+
         var uuid = params.uuid;
         var gender = params.gender;
         family_cache.get({ uuid: uuid, callback: function(doc) {
@@ -319,6 +329,9 @@ var family_menu = (function() {
     }
 
     function add_partner(params) {
+
+        return; // TODO: reimplement with origins
+
         var uuid = params.uuid;
         if (uuid == undefined) { return; }
         family_cache.get({ uuid: uuid, callback: function(doc) {
@@ -337,6 +350,9 @@ var family_menu = (function() {
     }
 
     function add_child(params) {
+
+        return; // TODO: reimplement with origins
+
         var uuid = params.uuid;
         var partner_uuid = params.partner_uuid;
         var new_child = { name: default_name, parents: [ uuid, partner_uuid ] };
@@ -346,6 +362,9 @@ var family_menu = (function() {
     }
 
     function add_parents(params) {
+
+        return; // TODO: reimplement with origins
+
         var uuid = params.uuid;
         // create parent 1
         family_cache.put({ doc: { name: default_name }, callback: function(parent_1) {
@@ -618,31 +637,31 @@ var family_cache = (function() {
         async_align(f, function(docs) { callback(docs); });
     }
 
+    var last_family; // TODO: create family cache
     function get_family_v2(p) {
 
         var id = p.uuid;
         var callback = p.callback;
 
-        // Get all origins for the current individual
-        // (gives me ids of parents, partners, siblings and children)
-        get_origins(ids, function(origins) {
-            var parent_ids = [];
-            var children_ids = [];
-            $.each(origins, function(index, value) {
-                if (value[0] == 'parent')
-                    parent_ids.push(value[1]);
-                else if (value[0] == 'child')
-                    children_ids.push(value[1]);
-            });
-            
-        });
-            // Get documents and origins for each id
-                // Get documents and origins for each additional id
-            
+        db.list('family/individual_family','denormalized?individual='+id, { success: function(data) {
+           
+            console.log(data);
+            if (callback) {
+                if (data) {
+                    last_family = data;
+                    callback(data);
+                } else {
+                    callback(last_family);
+                }
+            }
 
+        }});
     }
 
     function get_family(p) {
+
+        get_family_v2(p);
+        return;
 
         var id = p.uuid;
         var callback = p.callback;
