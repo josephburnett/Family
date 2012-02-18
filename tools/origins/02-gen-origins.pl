@@ -89,5 +89,5 @@ foreach (keys %origin_documents) {
     my $json_data = to_json($origin_documents{$_});
     print "Uploading origin document: $uuid\n";
     print "$json_data\n";
-    #`curl -X PUT $host/$database/$uuid -d \'$json_data\'`;
+    `curl -X PUT $host/$database/$uuid -d \'$json_data\'`;
 }
